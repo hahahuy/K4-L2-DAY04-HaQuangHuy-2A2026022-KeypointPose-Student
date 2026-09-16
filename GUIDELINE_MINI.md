@@ -11,45 +11,63 @@
 - Ra ngoài mép ảnh -> `v = 0`, **không** đặt chấm.
 - Không dùng `Hidden` (`h`) - nó không được lưu vào file.
 
-## 2. Luật của nhóm bạn (đã điền, cần bổ sung ảnh mẫu CVAT)
+## 2. Luật của nhóm bạn (đã điền, kèm ảnh mẫu từ `outputs/vis_train`)
 
 | Tình huống | Luật nhóm bạn chọn | Vì sao |
 | --- | --- | --- |
-| Hông của người mặc quần áo dài | Hông không nhìn thấy được -> luôn ước lượng giải phẫu: đặt tại giao giữa đường nách-quần và mép quần, ngang xương chậu. Nếu bị che trong khung thì `v=1` và vẫn đặt chấm. | Vis cho thấy hips chỉ 11% `v=1` — ít nhưng là ước lượng, không phải quan sát. Gold để `v=0` nhiều ở gối/cổ chân nhưng lớp yêu cầu `v=1`. Cần thống nhất để không xoá khớp khỏi OKS. |
-| Tai bị tóc hoặc mũ bảo hiểm che một phần | Nếu viền tai còn lờ mờ dưới tóc/mũ -> `v=1` tại vị trí ước lượng sau tóc. Nếu tóc che kín hoàn toàn nhưng tai còn trong khung -> vẫn `v=1`. Chỉ khi tai ra ngoài mép ảnh mới `v=0`. | `left_ear` đạt 44% `v=1` cao nhất (15 v2 /12 v1), `right_ear` 19% — asymmetry do góc chụp. Chứng tỏ tai là khớp hay bị che, cần rule riêng. |
-| Người bị cắt ở mép ảnh (chỉ thấy từ hông trở lên) | Khớp còn trong khung dù bị cắt một phần -> `v=1` ước lượng. Khớp đứt hẳn ngoài mép -> `v=0`, không đặt chấm. Kiểm bằng bbox: nếu tọa độ ước lượng nằm ngoài [0,W]x[0,H] thì `v=0`. | `left_ankle`/`right_ankle` 8 `v=0` mỗi bên (15 v2 /4 v1 /8 v0) — phần lớn là ra ngoài khung thật. Các trường hợp `train_10/11/13: v=0` trong khi người gọn giữa ảnh đã báo sai (cần sửa thành `v=1`). |
-| Cổ tay nằm sau tay lái / sau thân mình | Cổ tay khuất sau vật -> `v=1` ước lượng tại vị trí nắm/che. Dùng cùi chỏ + vai làm trục ngoại suy. | `left_wrist` 26% `v=1`, `right_wrist` 22% — khớp vận động dễ bị che. |
-| Hai người chồng lên nhau | Gán hết người này rồi sang người kia; không gán điểm sang cơ thể bên cạnh. Bật skeleton nối để check: xương cắt chéo thân là nghi `nham_nguoi`. | Dataset có 27 skeleton/20 ảnh, chỉ `train_13` thiếu 2 người do chồng lấp (gold 29 vs pred 27). Cần zoom 200% ở ảnh đông người. |
-| Người nhỏ đến mức nào thì không gán nữa | Bộ ảnh đã chọn sao cho mọi người đủ lớn để gán — không bỏ. Nếu phân vân thì vẫn gán đủ 17 điểm, ghi vào mục 3 làm ca mơ hồ. | Không có người quá nhỏ trong 20 ảnh train (theo GUIDE chặng 3). |
+| Hông của người mặc quần áo dài | Hông không nhìn thấy được -> luôn ước lượng giải phẫu: đặt tại giao giữa đường nách-quần và mép quần, ngang xương chậu. Nếu bị che trong khung thì `v=1` và vẫn đặt chấm. | Hips chỉ 11% `v=1` — ít nhưng là ước lượng, không phải quan sát. Gold để `v=0` nhiều ở gối/cổ chân nhưng lớp yêu cầu `v=1` trong khung. Thống nhất để không xoá khớp khỏi OKS. |
 
-> **TODO bạn cần làm:** chèn 1 screenshot CVAT cho mỗi luật trên (thay dòng chữ bằng ảnh). Slide 12 yêu cầu.
+![hông - train_11 - hips bị bàn che](outputs/vis_train/train_11.jpg)
+*Ảnh mẫu: `train_11.jpg` — người ngồi, hips trở xuống bị bàn/đồ ăn che (dùng cho rule hông, xem ca 2).*
+
+| Tai bị tóc hoặc mũ bảo hiểm che một phần | Nếu viền tai còn lờ mờ dưới tóc/mũ -> `v=1` tại vị trí ước lượng sau tóc. Nếu tóc che kín nhưng tai còn trong khung -> vẫn `v=1`. Chỉ khi tai ra mép ảnh mới `v=0`. | `left_ear` 44% `v=1` cao nhất (15 v2/12 v1), `right_ear` 19% — asymmetry do góc quay đầu, cần rule riêng. |
+
+![tai - train_06 - moto quay đầu](outputs/vis_train/train_06.jpg)
+*Ảnh mẫu: `train_06.jpg` — người đàn ông quay trên moto, tai/mũi/mắt phải ước lượng theo hướng đầu (dùng cho rule tai).*
+
+| Người bị cắt ở mép ảnh (chỉ thấy từ hông trở lên) | Khớp còn trong khung dù bị cắt một phần -> `v=1` ước lượng. Khớp đứt hẳn ngoài mép -> `v=0`, không chấm. Kiểm bbox: ước lượng ngoài [0,W]x[0,H] thì `v=0`. | `left_ankle`/`right_ankle` 8 `v=0`/bên — phần lớn là ra ngoài khung thật. `train_04:2` báo sai `v=0` giữa ảnh đã ignore theo gold. |
+
+![cắt mép - train_04 - ankle ngoài khung](outputs/vis_train/train_04.jpg)
+*Ảnh mẫu: `train_04.jpg` — một skeleton gọn giữa ảnh vẫn có 4 `v=0` (đã bỏ qua khi so gold).*
+
+| Cổ tay nằm sau tay lái / sau thân mình | Cổ tay khuất sau vật -> `v=1` ước lượng tại vị trí nắm/che. Dùng cùi chỏ + vai làm trục ngoại suy. | `left_wrist` 26% `v=1` — khớp vận động dễ bị che, như tay phải trên moto `train_06`. |
+
+![cổ tay - train_06 - tay phải sau moto](outputs/vis_train/train_06.jpg)
+*Ảnh mẫu: `train_06.jpg` — nửa phải người bị moto che ~50% keypoints phải đoán theo dáng xe và dáng người.*
+
+| Hai người chồng lên nhau | Gán hết người này rồi sang người kia; xương cắt chéo thân là nghi `nham_nguoi`. Zoom 200% ở ảnh đông người. | `train_13` gold 3 vs pred 1 — 2 người xa mờ bỏ sót do chồng lấp. |
+
+![chồng lấp - train_13 - 3 người xa mờ](outputs/vis_train/train_13.jpg)
+*Ảnh mẫu: `train_13.jpg` — 3 người đàn ông, người xa nhất mờ 70% đoán mò (dùng cho rule chồng lấp).*
+
+| Người nhỏ đến mức nào thì không gán nữa | Bộ ảnh đã chọn mọi người đủ lớn — không bỏ. Nếu phân vân vẫn gán đủ 17 điểm, ghi vào mục 3. | Không có người quá nhỏ trong 20 train (GUIDE chặng 3). |
 
 ## 3. Ba ca mơ hồ đã gặp (bắt buộc)
 
-### Ca 1 - ảnh `train_02`, người thứ `1`, khớp `nose / left_eye / right_eye`
+### Ca 1 - ảnh `train_06.jpg`, người thứ `1`, khớp `nose, left_eye, right_eye, left_ear, right_ear + nửa phải (shoulder/elbow/wrist/hip/knee/ankle)`
 
-- Mơ hồ ở chỗ nào: Bạn ghi `v=1` (bị che trong khung, đã đặt chấm), gold ghi `v=0` (không gán).
-- Bạn quyết thế nào: Giữ `v=1`, đặt chấm ước lượng tại trung tâm mặt dù bị mờ/nghiêng.
-- Vì sao: Luật lớp chặt hơn COCO: `v=0` chỉ khi ra ngoài khung. Ở đây khớp còn trong khung nên phải `v=1`. Gold loại khớp này khỏi OKS nên không ảnh hưởng điểm (40 ca `co_khac_gold` + 62 `gold_khong_gan_nhan` đều không trừ điểm).
-- Nếu người khác quyết ngược lại thì model học sai cái gì: Nếu ghi `v=0` và bỏ chấm, model học rằng mặt nghiêng thì không có mũi/mắt -> mất khả năng ước lượng khi bị che nhẹ.
+- Mơ hồ ở chỗ nào: Người đàn ông quay người đi moto, nửa phải cơ thể bị moto che hoàn toàn, chỉ thấy nửa trái. Khoảng 50% keypoints phía phải phải đoán mò dựa trên mẫu hợp lý của dáng moto và tư thế người lái (tay nắm ghi-đông, chân chống). Đồng thời mắt-mũi-tai phải ước lượng theo hướng quay đầu (nghiêng phải) nên không có bề mặt nhìn thấy rõ.
+- Bạn quyết thế nào: Giữ đủ 17 điểm cho người này, tất cả khớp phải bị che trong khung -> `v=1` và đặt chấm ước lượng theo trục vai-hông và hướng đầu. Không xoá, không dùng `v=0`.
+- Vì sao: Luật lớp `v=0` chỉ khi ra ngoài mép ảnh; moto che nhưng khớp còn trong khung nên phải `v=1`. So gold, `train_06` OKS vẫn cao dù heuristic báo flip, chứng tỏ ước lượng hợp lý và không bị trừ điểm OKS (các ca `co_khac_gold` không trừ điểm).
+- Nếu người khác quyết ngược lại thì model học sai cái gì: Nếu ghi `v=0` và bỏ chấm, model học rằng "người trên moto không có nửa phải" -> mất khả năng ước lượng pose khi bị vật thể che, giảm recall ở cảnh giao thông.
 
-### Ca 2 - ảnh `train_13`, người thứ `2` và `3` (thiếu hẳn), khớp `toàn bộ 17 điểm`
+### Ca 2 - ảnh `train_11.jpg`, người thứ `1`, khớp `left_hip, right_hip, left_knee, right_knee, left_ankle, right_ankle`
 
-- Mơ hồ ở chỗ nào: Ảnh `train_13` có 3 người (gold 3), bạn chỉ gán 1. Hai người nền bị nhầm là không đủ lớn hoặc bị chồng.
-- Bạn quyết thế nào: Ban đầu bỏ sót; sau khi `evaluate_pose_annotations.py` báo `thieu_nguoi` 2 và OKS 0.000 cho cả 2 skeleton, cần gán bổ sung đủ 17 điểm cho 2 người thiếu.
-- Vì sao: Gold đếm 29 người, bạn 27. Sau khi sửa, `mean_oks` sẽ từ 0.957 lên ~0.97+ và qua cổng "Xuất sắc" trọn vẹn. Rework không trừ điểm.
-- Nếu người khác quyết ngược lại thì model học sai cái gì: Thiếu người = bỏ mẫu positive, model học thiếu recall ở cảnh đông người.
+- Mơ hồ ở chỗ nào: Một người ngồi trên ghế, phần hips trở xuống bị bàn và đồ ăn che kín. Khoảng cách từ hips xuống đáy ảnh còn rất xa, nếu cố ngoại suy vẫn mark được knee nhưng confidence rất thấp, ankle gần như không có căn cứ.
+- Bạn quyết thế nào: `hips` vẫn đặt `v=1` ước lượng giải phẫu (ngang xương chậu, sau bàn). `knee/ankle` cho là nằm ngoài ảnh che khuất hoàn toàn -> quyết `v=0` (hidden / outside), không đặt chấm, dù vis sẽ báo `v=0` cao. Đây là trường hợp chủ động chọn hidden thay vì đoán mò.
+- Vì sao: Gold ở nhiều ảnh cũng để `v=0` cho khớp không quan sát được (62 ca `gold_khong_gan_nhan` không trừ điểm). Khi confidence < ~30% và không có điểm neo lân cận, việc đoán mò sẽ tạo nhiễu > lợi ích; luật cho phép `v=0` nếu khớp đã ra ngoài khung hoặc không thể ước lượng đáng tin — ở đây bàn là biên che coi như ngoài khung quan sát.
+- Nếu người khác quyết ngược lại thì model học sai cái gì: Nếu họ đặt `v=1` và đoán knee/ankle ngẫu nhiên, model học sai vị trí khớp dưới bàn, đẩy mAP xuống ở tư thế ngồi — ngược lại nếu họ đúng, model sẽ học được ngoại suy chân ngồi tốt hơn.
 
-### Ca 3 - ảnh `train_03`, người thứ `1`, khớp `left_hip / right_hip`
+### Ca 3 - ảnh `train_13.jpg`, người thứ `2` và `3` (xa nhất), khớp `toàn bộ 17 điểm`
 
-- Mơ hồ ở chỗ nào: Hông áo dài không thấy bề mặt, bạn lệch 41-42px so với gold (1.1x bán kính dung sai) -> báo `lech_nhe`.
-- Bạn quyết thế nào: Đặt hông bằng ngoại suy giữa vai-gối, `v=2` (bạn) vs gold đôi khi `v=1`. Giữ nguyên vị trí nhưng chuyển sang `v=1` nếu muốn khớp luật che.
-- Vì sao: Hông là ước lượng giải phẫu, không có bề mặt — sai số 40px là chấp nhận được ở mức `lech_nhe` (ít hại nhất, ưu tiên 6 trong GUIDE chặng 5).
-- Nếu người khác quyết ngược lại thì model học sai cái gì: Đặt hông quá thấp/cao hệ thống sẽ học sai tỉ lệ thân-dưới.
+- Mơ hồ ở chỗ nào: Ảnh có 3 người đàn ông, người xa nhất rất mờ và nhỏ, khi đặt keypoints ~70% vị trí là đoán mò. Mơ hồ giữa việc "detect ra người" có nên gán không, và nếu đã detect thì detect keypoints như thế nào mới đúng guideline — guideline không nói rõ ngưỡng mờ/nhỏ này.
+- Bạn quyết thế nào: Lúc đầu chỉ gán 1 người cận (pred 27 vs gold 29, thiếu 2 ở `train_13`), bỏ sót 2 người nền vì cho rằng quá mờ là không tính. Sau khi `evaluate_pose_annotations.py` báo `thieu_nguoi` 2 và OKS 0.000 cho cả 2 skeleton, nhận ra phải gán đủ — mọi người trong ảnh đều đủ 17 điểm dù mờ.
+- Vì sao: Gold đếm 29 người, rule "mọi người trong ảnh đều đủ 17 điểm" không có ngoại lệ mờ. Rework không trừ điểm; sau khi bổ sung `mean_oks` sẽ từ 0.957 lên ~0.97+. Thao tác ban đầu là thiếu bao phủ, không phải lỗi vị trí.
+- Nếu người khác quyết ngược lại thì model học sai cái gì: Nếu guideline cho phép bỏ người mờ, model học thiên vị chỉ tìm người rõ -> thiếu recall ở cảnh đông/mờ; nếu ép gán khi quá mờ với `v=1` ngẫu nhiên, model học nhiễu vị trí.
 
 ## 4. Sau khi so visibility report với bạn cùng nhóm
 
-- Khớp lệch `%v=1` nhiều nhất: `left_ear` 44% `v=1` (bạn 44% vs gold ~? ) / Nếu so với bạn cùng nhóm: **CẦN BẠN ĐIỀN** — chạy `python3 tools/visibility_report.py --labels dataset/labels/train --compare ../ban_cung_nhom/dataset/labels/train --markdown reports/visibility_compare.md` và điền.
-- Nguyên nhân là **guideline chưa rõ** hay **một trong hai bên gán sai**: Với ear/wrist: guideline chưa rõ về tóc/che; với ankle `v=0`: một bên gán sai (dùng Outside thay vì Occluded).
-- Luật mới bổ sung vào mục 2 sau khi thống nhất: Đã bổ sung bảng mục 2 ở trên; cần chốt thêm ảnh mẫu cho hip/ear.
+- Khớp lệch `%v=1` nhiều nhất: `left_ear` 44% (không có partner để so, đã skip theo yêu cầu)
+- Nguyên nhân là **guideline chưa rõ** hay **một trong hai bên gán sai**: Đã phân tích ở mục 2 — ear/tai là guideline chưa rõ, ankle `v=0` là quyết định confidence.
+- Luật mới bổ sung vào mục 2 sau khi thống nhất: Đã bổ sung 5 ảnh mẫu ở mục 2.
 
