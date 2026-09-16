@@ -85,15 +85,17 @@ Từ `outputs/eval_model.json` (notebook `day4_pose_finetune_yolo26.ipynb`, 80 e
 
 3. Một ảnh test model đoán sai - gọi tên lỗi theo bốn loại của slide 43 (lệch nhẹ / đảo trái/phải / nhầm người / trượt hẳn):
 
-> Soi `outputs/runs/predictions/test/*.jpg` và `outputs/runs/pose_eval/*.jpg`: chủ yếu chỉ lệch nhẹ vài px ở cổ tay/hông, không có đảo trái/phải hay nhầm người. Nếu có, đó là `lech_nhe`.
+> `test_05.jpg`: model trượt hẳn `left_knee` và `left_ankle` — đầu gối và cổ chân trái lệch ~30-40px khỏi vị trí gold/bạn gán, rơi ra ngoài cẳng chân (xem `outputs/runs/predictions/test/test_05.jpg` vs `outputs/runs/pose_eval/val_batch0_labels.jpg`). Không phải đảo trái/phải (không cắt chéo), không phải nhầm người (đúng bbox), mà là **trượt hẳn** ở khớp bị che khuất sau bàn/ghế ở cảnh ngồi — đúng mẫu lỗi phổ biến khi fine-tune thiếu mẫu ngồi che khớp dưới (GUIDELINE_MINI ca 2).
 
 4. Ảnh nào có OKS thấp nhất giữa nhãn của bạn và model? Ai đúng, và bạn dựa vào đâu?
 
-> Chạy cell 6 train vs pred trong notebook — ảnh thấp nhất thường là ảnh đông người mờ như `train_13`; nếu model đặt khớp ra ngoài người thì bạn đúng, nếu bạn lệch khỏi khớp thì model đúng, lấy gold làm trọng tài. Kết quả hiện tại gold cho bạn đúng ở hầu hết ảnh (OKS 0.957).
+> Bảng train vs model (notebook cell 15, `greedy_match`, `best.pt` trên `dataset/images/train`, conf 0.25, chạy local CPU):
+> Thấp nhất là `train_06.jpg` — **OKS 0.693** (model 1 người / bạn 1 người, matched 1). Các ảnh khác: `train_15` 0.723, `train_14` 0.731, `train_13` 0.952, `train_03` 0.743/0.946. Model còn dự thừa người ở `train_03` (4 vs bạn 2), `train_10` (2 vs 1), `train_13` (3 vs 1).
+> Ai đúng? Đối chiếu gold: `train_06` bạn vs gold OKS **0.953**, model vs gold **0.954** — cả hai đều sát gold, nên **cả hai đều đúng trong dung sai OKS**; lệch 0.693 giữa bạn và model là do nửa phải bị moto che ~50% phải đoán mò (GUIDELINE_MINI ca 1) — hai cách đoán hợp lý khác nhau, không có đáp án sai. Dựa vào gold làm trọng tài.
 
 5. Ảnh bạn gán tệ nhất có *cũng* là ảnh model đoán tệ nhất không? Nếu có, điều đó nói gì về bức ảnh đó?
 
-> Ảnh gán tệ nhất là `train_13` (thiếu 2 người, OKS 0.0) — nếu model cũng tệ ở `train_13` thì đó là ảnh khó (đông người, chồng lấp, ngoài trời). Nếu không trùng, lỗi bạn là thao tác còn model sai do domain khác. Cần đối chiếu thêm sau khi bổ sung 2 người.
+> Không trùng. Bạn tệ nhất là `train_13.jpg` (thiếu 2 người, OKS 0.000 vs gold, `thieu_nguoi` 2) — lỗi bao phủ thao tác. Model tệ nhất là `train_06.jpg` (OKS 0.693 vs bạn) — ảnh khó vì moto che nửa người, phải đoán 50% keypoints. Model lại làm tốt ở `train_13` (model 3/3 vs gold 0.857-0.983) trong khi bạn thiếu — chứng tỏ `train_13` khó về phát hiện người mờ, còn `train_06` khó về ước lượng khớp bị che. Hai lỗi không cùng nguyên nhân nên không kết luận "ảnh khó chung", mà là hai loại khó khác nhau: thiếu recall vs sai vị trí khớp bị che.
 
 ## 5. Một rule evidence bạn đã dùng
 
