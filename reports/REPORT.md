@@ -1,6 +1,6 @@
 # Báo cáo Ngày 4 - Keypoint & Pose
 
-Họ tên: Ha Quang Huy | MSSV: 2A2026022 | Nhóm: K4-L2 | Ngày: 2026-09-16
+Họ tên: Ha Quang Huy | MSSV: 2A202602263 | Nhóm: K4-L2 | Ngày: 2026-09-16
 
 > Điền bằng số liệu do công cụ sinh ra; không tự ước lượng.
 
@@ -102,4 +102,3 @@ Từ `outputs/eval_model.json` (notebook `day4_pose_finetune_yolo26.ipynb`, 80 e
 Chọn `train_11` người 1, khớp `hips/knee/ankle`:
 
 > `train_11` người ngồi, hips trở xuống bị bàn/đồ ăn che. Bằng chứng: bbox người vẫn cách đáy ảnh xa nhưng bàn là vật che kín, không thấy đầu gối hay cổ chân. Quyết định: `hips` `v=1` ước lượng ngang xương chậu sau bàn, `knee/ankle` `v=0` hidden không chấm do confidence <30% và không có điểm neo. Lý do `v=0` ở đây là coi bàn như biên che ngoài khung quan sát; nếu đoán `v=1` ngẫu nhiên sẽ tạo nhiễu cho model ở tư thế ngồi.
-
