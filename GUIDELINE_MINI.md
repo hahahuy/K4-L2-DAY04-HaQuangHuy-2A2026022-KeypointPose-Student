@@ -1,4 +1,4 @@
-# Mini guideline - nhóm: K4-L2 | người gán: Ha Quang Huy - 2A2026022 | ngày: 2026-09-16
+# Mini guideline - nhóm: K4-L2 | người gán: Ha Quang Huy - 2A202602263 | ngày: 2026-09-16
 
 > Điền file này **trong lúc** gán nhãn. Các luật dưới được thống nhất sau khi so vis và soi gold.
 
@@ -70,4 +70,3 @@
 - Khớp lệch `%v=1` nhiều nhất: `left_ear` 44% (không có partner để so, đã skip theo yêu cầu)
 - Nguyên nhân là **guideline chưa rõ** hay **một trong hai bên gán sai**: Đã phân tích ở mục 2 — ear/tai là guideline chưa rõ, ankle `v=0` là quyết định confidence.
 - Luật mới bổ sung vào mục 2 sau khi thống nhất: Đã bổ sung 5 ảnh mẫu ở mục 2.
-
